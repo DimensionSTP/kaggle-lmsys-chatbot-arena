@@ -14,3 +14,4 @@ data/
 tmp*
 !requirements.txt
 *.out
+*.pkl
