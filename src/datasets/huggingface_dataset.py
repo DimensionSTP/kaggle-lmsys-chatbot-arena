@@ -22,6 +22,7 @@ class DACONBirdImageDataset(Dataset):
         split: str,
         split_ratio: float,
         seed: int,
+        target_column_name: str,
         pretrained_model_name: str,
         image_size: int,
         augmentation_probability: float,
@@ -31,6 +32,7 @@ class DACONBirdImageDataset(Dataset):
         self.split = split
         self.split_ratio = split_ratio
         self.seed = seed
+        self.target_column_name = target_column_name
         self.data_encoder = AutoImageProcessor.from_pretrained(
             pretrained_model_name,
         )
@@ -70,7 +72,7 @@ class DACONBirdImageDataset(Dataset):
                 test_size=self.split_ratio,
                 random_state=self.seed,
                 shuffle=True,
-                stratify=data["label"],
+                stratify=data[self.target_column_name],
             )
             if self.split == "train":
                 data = train_data
@@ -97,7 +99,7 @@ class DACONBirdImageDataset(Dataset):
                 f"{self.data_path}/{self.split}/{file_name}.jpg"
                 for file_name in data["id"]
             ]
-        str_labels = data["label"].tolist()
+        str_labels = data[self.target_column_name].tolist()
         label_encoder = joblib.load(f"{self.data_path}/label_encoder.pkl")
         labels = label_encoder.transform(str_labels)
         return {
