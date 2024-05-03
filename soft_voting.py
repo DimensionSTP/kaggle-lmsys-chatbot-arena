@@ -1,32 +1,41 @@
+import os
+import warnings
+
+os.environ["HYDRA_FULL_ERROR"] = "1"
+warnings.filterwarnings("ignore")
+
+import joblib
+
 import numpy as np
 import pandas as pd
 
-from omegaconf import OmegaConf
+import hydra
+from omegaconf import DictConfig
 
 
+@hydra.main(
+    config_path="configs/",
+    config_name="voting.yaml",
+)
 def softly_vote_logits(
-    config_path: str,
+    config: DictConfig,
 ) -> None:
-    config = OmegaConf.load(config_path)
-    logit_files = config.logit_files
-    weights = config.weights
-    submission_file_path = config.submission_file_path
+    basic_path = config.basic_path
+    submission_file = config.submission_file
     target_column_name = config.target_column_name
-    voting_file_path = config.voting_file_path
+    voting_file = config.voting_file
+    votings = config.votings
 
-    if len(logit_files) != len(weights):
-        raise ValueError(
-            f"logit_file numbers({len(logit_files)}) does not match with weight numbers({len(weights)})"
-        )
+    weights = list(votings.values())
     if not np.isclose(sum(weights), 1):
         raise ValueError(f"summation of weights({sum(weights)}) is not equal to 1")
 
     weighted_logits = None
-    for logit_file, weight in zip(logit_files, weights):
+    for logit_file, weight in votings.items():
         try:
-            logit = np.load(logit_file)
+            logit = np.load(f"{basic_path}/logits/{logit_file}.npy")
         except:
-            raise FileNotFoundError(f"logit file {logit_file} dose noe exist")
+            raise FileNotFoundError(f"logit file {logit_file} does not exist")
         if weighted_logits is None:
             weighted_logits = logit * weight
         else:
@@ -36,14 +45,15 @@ def softly_vote_logits(
         weighted_logits,
         axis=1,
     )
-    submission_df = pd.read_csv(submission_file_path)
-    submission_df[target_column_name] = ensemble_predictions
+    submission_df = pd.read_csv(submission_file)
+    label_mapping = joblib.load(f"{basic_path}/data/label_mapping.pkl")
+    str_predictions = np.vectorize(label_mapping.get)(ensemble_predictions)
+    submission_df[target_column_name] = str_predictions
     submission_df.to_csv(
-        voting_file_path,
+        voting_file,
         index=False,
     )
 
 
 if __name__ == "__main__":
-    CONFIG_PATH = "./voting_config.yaml"
-    softly_vote_logits(config_path=CONFIG_PATH)
+    softly_vote_logits()

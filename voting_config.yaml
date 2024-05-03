@@ -1,9 +1,0 @@
-logit_files:
-  - logit1.npy
-  - logit2.npy
-wegiths:
-  - 0.5
-  - 0.5
-submission_file_path: /data/dacon-bird/data/sample_submission.csv
-target_column_name: label
-voting_file_path: /data/dacon-bird/submissions/soft_voting.csv
