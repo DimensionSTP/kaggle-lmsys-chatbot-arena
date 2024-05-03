@@ -1,0 +1,16 @@
+_target_: src.datasets.huggingface_dataset.DACONBirdImageDataset
+data_path: ${connected_dir}/data
+split: ${split.train}
+split_ratio: ${split_ratio}
+seed: ${seed}
+pretrained_model_name: ${pretrained_model_name}
+image_size: 256
+augmentation_probability: 0.001
+augmentations:
+  # - rotate30
+  # - rotate45
+  # - rotate90
+  # - hflip
+  # - vflip
+  - noise
+  # - blur

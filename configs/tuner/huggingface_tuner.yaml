@@ -1,0 +1,36 @@
+_target_: src.tuners.huggingface_tuner.HuggingFaceTuner
+hparams:
+  pretrained_model_name:
+    - microsoft/swinv2-large-patch4-window12to16-192to256-22kto1k-ft
+  lr:
+    low: 0.000005
+    high: 0.00005
+    log: False
+  t_max:
+    low: 25
+    high: 100
+    log: False
+  eta_min:
+    low: 0.0000001
+    high: 0.0000005
+    log: False
+
+module_params:
+  num_labels: ${num_labels}
+  average: macro
+  interval: step
+  devices: ${devices}
+  accelerator: ${accelerator}
+  strategy: ${strategy}
+  log_every_n_steps: ${log_every_n_steps}
+  precision: ${precision}
+  accumulate_grad_batches: ${accumulate_grad_batches}
+  max_epochs: ${epoch}
+  monitor: ${monitor}
+  mode: ${tracking_direction}
+  patience: ${patience}
+  min_delta: ${min_delta}
+
+num_trials: ${num_trials}
+seed: ${seed}
+hparams_save_path: ${hparams_save_path}
