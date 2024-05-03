@@ -107,7 +107,6 @@ class DACONBirdImageDataset(Dataset):
 
     def get_transform(self) -> A.Compose:
         transforms = [
-            # A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             A.Resize(width=self.image_size, height=self.image_size, interpolation=2),
         ]
         if self.split in ["train", "val"]:
