@@ -78,7 +78,7 @@ class DACONBirdImageDataset(Dataset):
                 data = train_data
             else:
                 data = val_data
-        elif self.split == "test":
+        elif self.split in ["test", "predict"]:
             csv_path = f"{self.data_path}/sample_submission.csv"
             data = pd.read_csv(csv_path)
         else:
@@ -94,10 +94,14 @@ class DACONBirdImageDataset(Dataset):
                 f"{self.data_path}/{file_name[2:]}"
                 for file_name in data["upscale_img_path"]
             ]
-        else:
+        elif self.split == "test":
             datas = [
                 f"{self.data_path}/{self.split}/{file_name}.jpg"
                 for file_name in data["id"]
+            ]
+        else:
+            datas = [
+                f"{self.data_path}/test/{file_name}.jpg" for file_name in data["id"]
             ]
         str_labels = data[self.target_column_name].tolist()
         label_encoder = joblib.load(f"{self.data_path}/label_encoder.pkl")
