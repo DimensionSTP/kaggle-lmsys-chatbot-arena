@@ -74,12 +74,12 @@ class HuggingFaceArchitecture(LightningModule):
             encoded=encoded,
             mode=mode,
         )
-        loss = output.loss
         logit = output.logits
         pred = torch.argmax(
             logit,
             dim=1,
         )
+        loss = output.loss
         return {
             "loss": loss,
             "logit": logit,
