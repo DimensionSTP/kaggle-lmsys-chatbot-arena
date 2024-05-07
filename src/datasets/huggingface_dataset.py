@@ -23,6 +23,8 @@ class DACONBirdImageDataset(Dataset):
         split_ratio: float,
         seed: int,
         target_column_name: str,
+        num_devices: int,
+        batch_size: int,
         pretrained_model_name: str,
         image_size: int,
         augmentation_probability: float,
@@ -33,6 +35,8 @@ class DACONBirdImageDataset(Dataset):
         self.split_ratio = split_ratio
         self.seed = seed
         self.target_column_name = target_column_name
+        self.num_devices = num_devices
+        self.batch_size = batch_size
         self.data_encoder = AutoImageProcessor.from_pretrained(
             pretrained_model_name,
         )
@@ -78,9 +82,30 @@ class DACONBirdImageDataset(Dataset):
                 data = train_data
             else:
                 data = val_data
-        elif self.split in ["test", "predict"]:
+        elif self.split == "test":
             csv_path = f"{self.data_path}/sample_submission.csv"
             data = pd.read_csv(csv_path)
+        elif self.split == "predict":
+            csv_path = f"{self.data_path}/sample_submission.csv"
+            data = pd.read_csv(csv_path)
+            if self.num_devices > 1:
+                last_row = data.iloc[-1]
+                total_batch_size = self.num_devices * self.batch_size
+                remainder = (len(data) % total_batch_size) % self.num_devices
+                if remainder != 0:
+                    num_dummies = self.num_devices - remainder
+                    repeated_rows = pd.DataFrame([last_row] * num_dummies)
+                    repeated_rows.reset_index(
+                        drop=True,
+                        inplace=True,
+                    )
+                    data = pd.concat(
+                        [
+                            data,
+                            repeated_rows,
+                        ],
+                        ignore_index=True,
+                    )
         else:
             raise ValueError(f"Inavalid split: {self.split}")
 
