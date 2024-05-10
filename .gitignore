@@ -13,5 +13,6 @@ multirun/
 data/
 tmp*
 !requirements.txt
+!packages.txt
 *.out
 *.pkl
