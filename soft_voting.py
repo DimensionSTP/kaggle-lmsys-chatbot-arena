@@ -43,7 +43,7 @@ def softly_vote_logits(
 
     ensemble_predictions = np.argmax(
         weighted_logits,
-        axis=1,
+        axis=-1,
     )
     submission_df = pd.read_csv(submission_file)
     label_mapping = joblib.load(f"{basic_path}/data/label_mapping.pkl")

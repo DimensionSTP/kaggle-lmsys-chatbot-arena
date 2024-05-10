@@ -305,7 +305,7 @@ def predict(
     sorted_logits = sorted_logits_with_indices[: len(pred_df), :-1].numpy()
     all_predictions = np.argmax(
         sorted_logits,
-        axis=1,
+        axis=-1,
     )
     label_mapping = joblib.load(f"{config.connected_dir}/data/label_mapping.pkl")
     all_str_predictions = np.vectorize(label_mapping.get)(all_predictions)
