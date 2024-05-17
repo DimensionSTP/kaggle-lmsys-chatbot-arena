@@ -10,7 +10,7 @@ DACON CV competition dataset(bird image classification)
 ```bash
 # clone project
 git clone https://github.com/DimensionSTP/dacon-bird.git
-cd upstage-cv
+cd dacon-bird
 
 # [OPTIONAL] create conda environment
 conda create -n myenv python=3.8
