@@ -26,7 +26,7 @@ from omegaconf import DictConfig
 def softly_vote_logits(
     config: DictConfig,
 ) -> None:
-    basic_path = config.basic_path
+    connected_dir = config.connected_dir
     voted_logit = config.voted_logit
     submission_file = config.submission_file
     target_column_name = config.target_column_name
@@ -40,7 +40,7 @@ def softly_vote_logits(
     weighted_logits = None
     for logit_file, weight in votings.items():
         try:
-            logit = np.load(f"{basic_path}/logits/{logit_file}.npy")
+            logit = np.load(f"{connected_dir}/logits/{logit_file}.npy")
         except:
             raise FileNotFoundError(f"logit file {logit_file} does not exist")
         if weighted_logits is None:
@@ -57,7 +57,7 @@ def softly_vote_logits(
         voted_logit,
         weighted_logits,
     )
-    label_mapping = joblib.load(f"{basic_path}/data/label_mapping.pkl")
+    label_mapping = joblib.load(f"{connected_dir}/data/label_mapping.pkl")
     str_predictions = np.vectorize(label_mapping.get)(ensemble_predictions)
     submission_df[target_column_name] = str_predictions
     submission_df.to_csv(
