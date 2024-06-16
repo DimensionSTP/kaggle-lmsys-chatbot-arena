@@ -1,5 +1,4 @@
 import os
-import joblib
 
 import numpy as np
 import pandas as pd
@@ -309,8 +308,6 @@ def predict(
         sorted_logits,
         axis=-1,
     )
-    label_mapping = joblib.load(f"{config.connected_dir}/data/label_mapping.pkl")
-    all_str_predictions = np.vectorize(label_mapping.get)(all_predictions)
     if not os.path.exists(f"{config.connected_dir}/logits"):
         os.makedirs(
             f"{config.connected_dir}/logits",
@@ -320,7 +317,7 @@ def predict(
         f"{config.connected_dir}/logits/{config.logit_name}.npy",
         sorted_logits,
     )
-    pred_df[config.target_column_name] = all_str_predictions
+    pred_df[config.target_column_name] = all_predictions
     if not os.path.exists(f"{config.connected_dir}/submissions"):
         os.makedirs(
             f"{config.connected_dir}/submissions",
