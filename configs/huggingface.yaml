@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - dataset: huggingface_daconbirdimage_dataset
+  - dataset: huggingface_kaggleessayscoring_dataset
   - architecture: huggingface_architecture
   - tuner: huggingface_tuner
   - logger: wandb

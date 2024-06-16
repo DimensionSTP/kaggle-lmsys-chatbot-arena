@@ -1,16 +1,16 @@
-# Basic DL pipeline for CV competition
+# Pipeline for Kaggle competition
 
-## For DACON CV competition
+## For Kaggle learning-agency-lab-automated-essay-scoring-2 competition
 
 ### Dataset
-DACON CV competition dataset(bird image classification)
+Kaggle learning-agency-lab-automated-essay-scoring-2 competition dataset(Automatic Essay Scoring dataset)
 
 ### Quick setup
 
 ```bash
 # clone project
-git clone https://github.com/DimensionSTP/dacon-bird.git
-cd dacon-bird
+git clone https://github.com/DimensionSTP/kaggle-learning-agency-lab-automated-essay-scoring-2.git
+cd kaggle-learning-agency-lab-automated-essay-scoring-2
 
 # [OPTIONAL] create conda environment
 conda create -n myenv python=3.8
