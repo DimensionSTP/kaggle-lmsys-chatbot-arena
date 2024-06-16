@@ -10,8 +10,6 @@ import warnings
 os.environ["HYDRA_FULL_ERROR"] = "1"
 warnings.filterwarnings("ignore")
 
-import joblib
-
 import numpy as np
 import pandas as pd
 
@@ -57,9 +55,7 @@ def softly_vote_logits(
         voted_logit,
         weighted_logits,
     )
-    label_mapping = joblib.load(f"{connected_dir}/data/label_mapping.pkl")
-    str_predictions = np.vectorize(label_mapping.get)(ensemble_predictions)
-    submission_df[target_column_name] = str_predictions
+    submission_df[target_column_name] = ensemble_predictions
     submission_df.to_csv(
         voted_file,
         index=False,
