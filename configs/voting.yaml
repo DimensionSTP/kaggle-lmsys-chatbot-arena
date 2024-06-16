@@ -4,13 +4,13 @@ defaults:
 run_name: soft_voting
 work_dir: ${hydra:runtime.cwd}
 
-package_name: dacon-bird
+package_name: kaggle-learning-agency-lab-automated-essay-scoring-2
 connected_dir: ${oc.env:CONNECTED_DIR}/${package_name}
 voted_name: soft_voting
 
 voted_logit: ${connected_dir}/logits/${voted_name}.npy
-submission_file: ${connected_dir}/data/sample_submission.csv
-target_column_name: label
+submission_file: ${connected_dir}/data/test.csv
+target_column_name: target
 voted_file: ${connected_dir}/submissions/${voted_name}.csv
 
 votings:
