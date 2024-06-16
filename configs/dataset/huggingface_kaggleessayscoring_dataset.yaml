@@ -1,13 +1,14 @@
 _target_: src.datasets.huggingface_dataset.KaggleEssayScoringDataset
 data_path: ${connected_dir}/data
 split: ${split.train}
-split_ratio: ${split_ratio}
-seed: ${seed}
+is_causal: ${is_causal}
+is_preprocessed: ${is_preprocessed}
+data_column_name: ${data_column_name}
+prompt_column_name: ${prompt_column_name}
 target_column_name: ${target_column_name}
 num_devices: ${devices}
 batch_size: ${batch_size}
 pretrained_model_name: ${pretrained_model_name}
-image_size: 256
-augmentation_probability: 0.001
-augmentations:
-  - noise
+custom_data_encoder_path: ${custom_data_encoder_path}
+data_max_length: ${data_max_length}
+target_max_length: ${target_max_length}
