@@ -1,52 +1,58 @@
 from typing import Dict, Any, List
-import joblib
 
-import numpy as np
 import pandas as pd
-from PIL import Image
 from sklearn.model_selection import train_test_split
 
 import torch
 from torch.utils.data import Dataset
 
-from transformers import AutoImageProcessor
-
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
+from transformers import AutoTokenizer
 
 
-class DACONBirdImageDataset(Dataset):
+class KaggleEssayScoringDataset(Dataset):
     def __init__(
         self,
         data_path: str,
         split: str,
-        split_ratio: float,
-        seed: int,
+        is_causal: bool,
+        is_preprocessed: bool,
+        data_column_name: str,
+        prompt_column_name: str,
         target_column_name: str,
         num_devices: int,
         batch_size: int,
         pretrained_model_name: str,
-        image_size: int,
-        augmentation_probability: float,
-        augmentations: List[str],
+        custom_data_encoder_path: str,
+        data_max_length: int,
+        target_max_length: int,
     ) -> None:
         self.data_path = data_path
         self.split = split
-        self.split_ratio = split_ratio
-        self.seed = seed
+        self.is_causal = is_causal
+        self.is_preprocessed = is_preprocessed
+        self.data_column_name = data_column_name
+        self.prompt_column_name = prompt_column_name
         self.target_column_name = target_column_name
         self.num_devices = num_devices
         self.batch_size = batch_size
-        self.data_encoder = AutoImageProcessor.from_pretrained(
-            pretrained_model_name,
+        self.pretrained_model_name = pretrained_model_name
+        if self.is_preprocessed:
+            data_encoder_path = (
+                f"{custom_data_encoder_path}/{self.pretrained_model_name}"
+            )
+        else:
+            data_encoder_path = self.pretrained_model_name
+        self.data_encoder = AutoTokenizer.from_pretrained(
+            data_encoder_path,
+            use_fast=True,
         )
+        if self.data_encoder.pad_token_id is None:
+            self.data_encoder.pad_token_id = self.data_encoder.eos_token_id
         dataset = self.get_dataset()
         self.datas = dataset["datas"]
         self.labels = dataset["labels"]
-        self.image_size = image_size
-        self.augmentation_probability = augmentation_probability
-        self.augmentations = augmentations
-        self.transform = self.get_transform()
+        self.data_max_length = data_max_length
+        self.target_max_length = target_max_length
 
     def __len__(self) -> int:
         return len(self.labels)
@@ -55,13 +61,30 @@ class DACONBirdImageDataset(Dataset):
         self,
         idx: int,
     ) -> Dict[str, Any]:
-        data = np.array(Image.open(self.datas[idx]).convert("RGB"))
-        data = self.transform(image=data)["image"]
-        encoded = self.encode_image(data)
-        encoded["labels"] = torch.tensor(
-            [self.labels[idx]],
-            dtype=torch.long,
-        ).squeeze(0)
+        if self.is_causal:
+            encoded = self.encode_text(
+                data=self.datas[idx],
+                data_type="data",
+            )
+            label = self.encode_text(
+                data=self.labels[idx],
+                data_type="target",
+            )["input_ids"]
+            encoded["labels"] = label
+        else:
+            if self.is_preprocessed:
+                prompt = self.datas[idx] + self.labels[idx]
+            else:
+                prompt = self.generate_prompt(
+                    data=self.datas[idx],
+                    label=self.labels[idx],
+                )
+            encoded = self.encode_text(
+                data=prompt,
+                data_type="data",
+            )
+        if "token_type_ids" in encoded.keys():
+            del encoded["token_type_ids"]
         return {
             "encoded": encoded,
             "index": idx,
@@ -83,10 +106,10 @@ class DACONBirdImageDataset(Dataset):
             else:
                 data = val_data
         elif self.split == "test":
-            csv_path = f"{self.data_path}/sample_submission.csv"
+            csv_path = f"{self.data_path}/{self.split}.csv"
             data = pd.read_csv(csv_path)
         elif self.split == "predict":
-            csv_path = f"{self.data_path}/sample_submission.csv"
+            csv_path = f"{self.data_path}/test.csv"
             data = pd.read_csv(csv_path)
             if self.num_devices > 1:
                 last_row = data.iloc[-1]
@@ -109,98 +132,69 @@ class DACONBirdImageDataset(Dataset):
         else:
             raise ValueError(f"Inavalid split: {self.split}")
 
-        if self.split == "train":
-            datas = [
-                f"{self.data_path}/{file_name[2:]}"
-                for file_name in data["upscale_img_path"]
-            ]
-        elif self.split == "val":
-            datas = [
-                f"{self.data_path}/{file_name[2:]}"
-                for file_name in data["upscale_img_path"]
-            ]
-        elif self.split == "test":
-            datas = [
-                f"{self.data_path}/{self.split}/{file_name}.jpg"
-                for file_name in data["id"]
-            ]
+        if self.is_causal:
+            datas = data[self.data_column_name].tolist()
         else:
-            datas = [
-                f"{self.data_path}/test/{file_name}.jpg" for file_name in data["id"]
-            ]
-        str_labels = data[self.target_column_name].tolist()
-        label_encoder = joblib.load(f"{self.data_path}/label_encoder.pkl")
-        labels = label_encoder.transform(str_labels)
+            if self.is_preprocessed:
+                datas = data[self.prompt_column_name].tolist()
+            else:
+                datas = data[self.data_column_name].tolist()
+        labels = data[self.target_column_name].tolist()
         return {
             "datas": datas,
             "labels": labels,
         }
 
-    def get_transform(self) -> A.Compose:
-        transforms = [
-            A.Resize(width=self.image_size, height=self.image_size, interpolation=2),
-        ]
-        if self.split in ["train", "val"]:
-            for aug in self.augmentations:
-                if aug == "rotate30":
-                    transforms.append(
-                        A.Rotate(
-                            limit=[30, 30],
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "rotate45":
-                    transforms.append(
-                        A.Rotate(
-                            limit=[45, 45],
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "rotate90":
-                    transforms.append(
-                        A.Rotate(
-                            limit=[90, 90],
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "hflip":
-                    transforms.append(
-                        A.HorizontalFlip(
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "vflip":
-                    transforms.append(
-                        A.VerticalFlip(
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "noise":
-                    transforms.append(
-                        A.GaussNoise(
-                            p=self.augmentation_probability,
-                        )
-                    )
-                elif aug == "blur":
-                    transforms.append(
-                        A.Blur(
-                            blur_limit=7,
-                            p=self.augmentation_probability,
-                        )
-                    )
-            transforms.append(ToTensorV2())
-            return A.Compose(transforms)
-        else:
-            transforms.append(ToTensorV2())
-            return A.Compose(transforms)
-
-    def encode_image(
+    def encode_text(
         self,
-        data: np.ndarray,
+        data: str,
+        data_type: str,
     ) -> Dict[str, torch.Tensor]:
+        if data_type == "data":
+            if self.is_causal:
+                max_length = self.data_max_length
+            else:
+                if self.split == "predict":
+                    max_length = self.data_max_length
+                else:
+                    max_length = self.data_max_length + self.target_max_length
+        elif data_type == "target":
+            max_length = self.target_max_length
+        else:
+            raise ValueError(f"Inavalid data_type: {data_type}")
         encoded = self.data_encoder(
             data,
+            padding="max_length",
+            max_length=max_length,
+            truncation=True,
             return_tensors="pt",
+            add_special_tokens=True,
         )
         encoded = {k: v.squeeze(0) for k, v in encoded.items()}
         return encoded
+
+    def generate_prompt(
+        self,
+        data: str,
+        label: str,
+    ) -> str:
+        default_system_prompt = "Please read the following essay and assign a score of 1,2,3,4,5,6 where 6 is the best. Output only a single number with no explanation."
+        if self.split == "predict":
+            prompt = f"""### Instruction:
+            {default_system_prompt} 
+
+            ### Input:
+            {data.strip()}
+
+            ### Response:
+            """.strip()
+        else:
+            prompt = f"""### Instruction:
+            {default_system_prompt} 
+
+            ### Input:
+            {data.strip()}
+
+            ### Response:
+            The score is: {label} """.strip()
+        return prompt
