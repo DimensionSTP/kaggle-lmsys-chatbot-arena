@@ -8,11 +8,16 @@ from lightning.pytorch import LightningModule
 
 from deepspeed.ops.adam import FusedAdam, DeepSpeedCPUAdam
 
+from transformers import AutoTokenizer
+
 
 class HuggingFaceArchitecture(LightningModule):
     def __init__(
         self,
         model: nn.Module,
+        pretrained_model_name: str,
+        is_preprocessed: bool,
+        custom_data_encoder_path: str,
         num_labels: int,
         average: str,
         strategy: str,
@@ -20,14 +25,33 @@ class HuggingFaceArchitecture(LightningModule):
         period: int,
         eta_min: float,
         interval: str,
+        options: Dict[str, Any],
+        target_max_length: int,
+        target_column_name: str,
     ) -> None:
         super().__init__()
         self.model = model
+        self.pretrained_model_name = pretrained_model_name
+        if is_preprocessed:
+            data_encoder_path = (
+                f"{custom_data_encoder_path}/{self.pretrained_model_name}"
+            )
+        else:
+            data_encoder_path = self.pretrained_model_name
+        self.data_encoder = AutoTokenizer.from_pretrained(
+            data_encoder_path,
+            use_fast=True,
+        )
+        if self.data_encoder.pad_token_id is None:
+            self.data_encoder.pad_token_id = self.data_encoder.eos_token_id
         self.strategy = strategy
         self.lr = lr
         self.period = period
         self.eta_min = eta_min
         self.interval = interval
+        self.options = options
+        self.target_max_length = target_max_length
+        self.target_column_name = target_column_name
 
         metrics = MetricCollection(
             [
@@ -73,12 +97,12 @@ class HuggingFaceArchitecture(LightningModule):
             encoded=encoded,
             mode=mode,
         )
-        logit = output.logits
+        logit = output["logit"]
         pred = torch.argmax(
             logit,
             dim=-1,
         )
-        loss = output.loss
+        loss = output["loss"]
         return {
             "loss": loss,
             "logit": logit,
