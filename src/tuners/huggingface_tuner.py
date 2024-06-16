@@ -12,6 +12,9 @@ import optuna
 from optuna.samplers import TPESampler
 from optuna.pruners import HyperbandPruner
 
+from transformers import BitsAndBytesConfig
+from peft import LoraConfig
+
 from ..architectures.models.huggingface_model import HuggingFaceModel
 from ..architectures.huggingface_architecture import HuggingFaceArchitecture
 
@@ -82,6 +85,13 @@ class HuggingFaceTuner:
                 name="pretrained_model_name",
                 choices=self.hparams.pretrained_model_name,
             )
+        if self.hparams.dropout_ratio:
+            params["dropout_ratio"] = trial.suggest_float(
+                name="dropout_ratio",
+                low=self.hparams.dropout_ratio.low,
+                high=self.hparams.dropout_ratio.high,
+                log=self.hparams.dropout_ratio.log,
+            )
         if self.hparams.lr:
             params["lr"] = trial.suggest_float(
                 name="lr",
@@ -106,10 +116,25 @@ class HuggingFaceTuner:
 
         model = HuggingFaceModel(
             pretrained_model_name=params["pretrained_model_name"],
+            is_causal=self.module_params.is_causal,
+            is_preprocessed=self.module_params.is_preprocessed,
+            custom_data_encoder_path=self.module_params.custom_data_encoder_path,
+            precision=self.module_params.precision,
+            mode=self.module_params.model_execution_mode,
+            quantization_type=self.module_params.quantization_type,
+            quantization_config=BitsAndBytesConfig(
+                **self.module_params.quantization_config
+            ),
+            peft_type=self.module_params.peft_type,
+            peft_config=LoraConfig(**self.module_params.peft_config),
+            dropout_ratio=params["dropout_ratio"],
             num_labels=self.module_params.num_labels,
         )
         architecture = HuggingFaceArchitecture(
             model=model,
+            pretrained_model_name=params["pretrained_model_name"],
+            is_preprocessed=self.module_params.is_preprocessed,
+            custom_data_encoder_path=self.module_params.custom_data_encoder_path,
             num_labels=self.module_params.num_labels,
             average=self.module_params.average,
             strategy=self.module_params.strategy,
@@ -117,6 +142,9 @@ class HuggingFaceTuner:
             period=params["period"],
             eta_min=params["eta_min"],
             interval=self.module_params.interval,
+            options=self.module_params.options,
+            target_max_length=self.module_params.target_max_length,
+            target_column_name=self.module_params.target_column_name,
         )
 
         self.logger.log_hyperparams(params)
@@ -161,4 +189,4 @@ class HuggingFaceTuner:
             )
             raise e
 
-        return trainer.callback_metrics[self.monitor].item()
+        return trainer.callback_metrics[self.module_params.monitor].item()
