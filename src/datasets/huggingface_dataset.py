@@ -61,19 +61,14 @@ class KaggleEssayScoringDataset(Dataset):
         self,
         idx: int,
     ) -> Dict[str, Any]:
-        if self.is_causal:
+        if not self.is_causal:
             encoded = self.encode_text(
                 data=self.datas[idx],
                 data_type="data",
             )
-            label = self.encode_text(
-                data=self.labels[idx],
-                data_type="target",
-            )["input_ids"]
-            encoded["labels"] = label
         else:
             if self.is_preprocessed:
-                prompt = self.datas[idx] + self.labels[idx]
+                prompt = self.datas[idx] + str(self.labels[idx])
             else:
                 prompt = self.generate_prompt(
                     data=self.datas[idx],
@@ -83,6 +78,10 @@ class KaggleEssayScoringDataset(Dataset):
                 data=prompt,
                 data_type="data",
             )
+        encoded["labels"] = torch.tensor(
+            [self.labels[idx]],
+            dtype=torch.long,
+        ).squeeze(0)
         if "token_type_ids" in encoded.keys():
             del encoded["token_type_ids"]
         return {
@@ -92,8 +91,12 @@ class KaggleEssayScoringDataset(Dataset):
 
     def get_dataset(self) -> Dict[str, List[Any]]:
         if self.split in ["train", "val"]:
-            csv_path = f"{self.data_path}/train.csv"
+            if self.is_preprocessed:
+                csv_path = f"{self.data_path}/preprocessed_dataset/{self.pretrained_model_name}/train.csv"
+            else:
+                csv_path = f"{self.data_path}/train.csv"
             data = pd.read_csv(csv_path)
+            data = data.fillna("_")
             train_data, val_data = train_test_split(
                 data,
                 test_size=self.split_ratio,
@@ -106,11 +109,19 @@ class KaggleEssayScoringDataset(Dataset):
             else:
                 data = val_data
         elif self.split == "test":
-            csv_path = f"{self.data_path}/{self.split}.csv"
+            if self.is_preprocessed:
+                csv_path = f"{self.data_path}/preprocessed_dataset/{self.pretrained_model_name}/{self.split}.csv"
+            else:
+                csv_path = f"{self.data_path}/{self.split}.csv"
             data = pd.read_csv(csv_path)
+            data = data.fillna("_")
         elif self.split == "predict":
-            csv_path = f"{self.data_path}/test.csv"
+            if self.is_preprocessed:
+                csv_path = f"{self.data_path}/preprocessed_dataset/{self.pretrained_model_name}/test.csv"
+            else:
+                csv_path = f"{self.data_path}/test.csv"
             data = pd.read_csv(csv_path)
+            data = data.fillna("_")
             if self.num_devices > 1:
                 last_row = data.iloc[-1]
                 total_batch_size = self.num_devices * self.batch_size
@@ -131,8 +142,7 @@ class KaggleEssayScoringDataset(Dataset):
                     )
         else:
             raise ValueError(f"Inavalid split: {self.split}")
-
-        if self.is_causal:
+        if not self.is_causal:
             datas = data[self.data_column_name].tolist()
         else:
             if self.is_preprocessed:
@@ -151,7 +161,7 @@ class KaggleEssayScoringDataset(Dataset):
         data_type: str,
     ) -> Dict[str, torch.Tensor]:
         if data_type == "data":
-            if self.is_causal:
+            if not self.is_causal:
                 max_length = self.data_max_length
             else:
                 if self.split == "predict":
@@ -187,7 +197,7 @@ class KaggleEssayScoringDataset(Dataset):
             {data.strip()}
 
             ### Response:
-            """.strip()
+            The score is: """.strip()
         else:
             prompt = f"""### Instruction:
             {default_system_prompt} 
