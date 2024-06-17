@@ -2,7 +2,7 @@ from typing import Dict, Any
 
 import torch
 from torch import optim, nn
-from torchmetrics import MetricCollection, F1Score, Accuracy
+from torchmetrics import MetricCollection, CohenKappa
 
 from lightning.pytorch import LightningModule
 
@@ -19,7 +19,6 @@ class HuggingFaceArchitecture(LightningModule):
         is_preprocessed: bool,
         custom_data_encoder_path: str,
         num_labels: int,
-        average: str,
         strategy: str,
         lr: float,
         period: int,
@@ -55,15 +54,9 @@ class HuggingFaceArchitecture(LightningModule):
 
         metrics = MetricCollection(
             [
-                F1Score(
+                CohenKappa(
                     task="multiclass",
                     num_classes=num_labels,
-                    average=average,
-                ),
-                Accuracy(
-                    task="multiclass",
-                    num_classes=num_labels,
-                    average=average,
                 ),
             ]
         )
