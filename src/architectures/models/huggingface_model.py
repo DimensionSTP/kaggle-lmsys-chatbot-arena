@@ -96,7 +96,7 @@ class HuggingFaceModel(nn.Module):
                 output.last_hidden_state[:, 0, :],
             )
         )
-        loss = OrdinalCrossEntropyLoss(
+        loss = self.criterion(
             logit,
             label,
         )
