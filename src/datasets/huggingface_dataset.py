@@ -14,6 +14,8 @@ class KaggleEssayScoringDataset(Dataset):
         self,
         data_path: str,
         split: str,
+        split_ratio: float,
+        seed: int,
         is_causal: bool,
         is_preprocessed: bool,
         data_column_name: str,
@@ -28,6 +30,8 @@ class KaggleEssayScoringDataset(Dataset):
     ) -> None:
         self.data_path = data_path
         self.split = split
+        self.split_ratio = split_ratio
+        self.seed = seed
         self.is_causal = is_causal
         self.is_preprocessed = is_preprocessed
         self.data_column_name = data_column_name
