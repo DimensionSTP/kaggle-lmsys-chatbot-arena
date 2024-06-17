@@ -134,7 +134,6 @@ class HuggingFaceTuner:
             is_preprocessed=self.module_params.is_preprocessed,
             custom_data_encoder_path=self.module_params.custom_data_encoder_path,
             num_labels=self.module_params.num_labels,
-            average=self.module_params.average,
             strategy=self.module_params.strategy,
             lr=params["lr"],
             period=params["period"],
