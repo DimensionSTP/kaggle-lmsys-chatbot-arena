@@ -24,6 +24,7 @@ split:
 
 batch_size: 24
 
+split_ratio: 0.1
 is_causal: True
 is_preprocessed: True
 data_column_name: full_text
