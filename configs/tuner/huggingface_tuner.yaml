@@ -39,7 +39,6 @@ module_params:
     bias: ${peft_config.bias}
     task_type: ${peft_config.task_type}
   num_labels: ${num_labels}
-  average: macro
   interval: step
   options: ${options}
   target_max_length: ${target_max_length}
