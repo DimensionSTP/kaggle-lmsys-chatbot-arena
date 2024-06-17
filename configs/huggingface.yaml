@@ -62,7 +62,7 @@ options:
   output_scores: True
   no_repeat_ngram_size: 2
 
-monitor: val_MulticlassF1Score
+monitor: val_MulticlassCohenKappa
 tracking_direction: max
 patience: 2
 min_delta: 0
