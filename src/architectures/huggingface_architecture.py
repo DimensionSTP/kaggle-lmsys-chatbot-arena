@@ -91,17 +91,19 @@ class HuggingFaceArchitecture(LightningModule):
         mode: str,
     ) -> Dict[str, torch.Tensor]:
         encoded = batch["encoded"]
-        label = encoded["labels"]
+        original_label = encoded["labels"]
+        label = original_label - 1
         index = batch["index"]
         output = self(
             encoded=encoded,
             mode=mode,
         )
         logit = output["logit"]
-        pred = torch.argmax(
+        original_pred = torch.argmax(
             logit,
             dim=-1,
         )
+        pred = original_pred - 1
         loss = output["loss"]
         return {
             "loss": loss,
