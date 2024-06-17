@@ -8,8 +8,8 @@ upload_user="meta-llama"
 model_type="Meta-Llama-3-8B-Instruct"
 quantization_type="quantization"
 peft_type="lora"
-data_max_length=1024
-target_max_length=256
+data_max_length=598
+target_max_length=2
 precision="bf16"
 batch_size=24
 
