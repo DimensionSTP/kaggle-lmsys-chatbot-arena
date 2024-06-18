@@ -22,7 +22,7 @@ split:
   test: test
   predict: predict
 
-batch_size: 24
+batch_size: 128
 
 split_ratio: 0.1
 is_causal: True
