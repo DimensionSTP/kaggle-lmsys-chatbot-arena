@@ -2,6 +2,7 @@
 
 path="src/preprocessing"
 
+python $path/scale_target_column.py
 python $path/add_empty_column.py
 python $path/make_corpus.py
 python $path/train_tokenizer.py
