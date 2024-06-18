@@ -34,14 +34,26 @@ class HuggingFaceModel(nn.Module):
         self.pretrained_model_name = pretrained_model_name
         self.is_causal = is_causal
         self.is_preprocessed = is_preprocessed
-        self.custom_data_encoder_path = custom_data_encoder_path
-        self.merged_model_path = merged_model_path
-
         if self.is_preprocessed:
-            if os.path.exists(self.merged_model_path):
-                self.model_path = self.merged_model_path
-            else:
-                self.model_path = self.pretrained_model_name
+            data_encoder_path = (
+                f"{custom_data_encoder_path}/{self.pretrained_model_name}"
+            )
+        else:
+            data_encoder_path = self.pretrained_model_name
+        self.data_encoder = AutoTokenizer.from_pretrained(
+            data_encoder_path,
+            use_fast=True,
+        )
+        if self.data_encoder.pad_token_id is None:
+            self.data_encoder.pad_token_id = self.data_encoder.eos_token_id
+
+        self.merged_model_path = merged_model_path
+        self.model_path = self.pretrained_model_name
+        if self.is_preprocessed:
+            if os.path.exists(f"{self.merged_model_path}/{self.pretrained_model_name}"):
+                self.model_path = (
+                    f"{self.merged_model_path}/{self.pretrained_model_name}"
+                )
 
         self.attn_implementation = None
         if precision == 32 or precision == "32":
@@ -99,18 +111,12 @@ class HuggingFaceModel(nn.Module):
             quantization_config=self.quantization_config,
             device_map=self.device_map,
             num_labels=self.num_labels,
-            output_hidden_states=False,
             ignore_mismatched_sizes=True,
         )
 
-        if self.is_preprocessed:
-            data_encoder = AutoTokenizer.from_pretrained(
-                f"{self.custom_data_encoder_path}/{self.pretrained_model_name}",
-                use_fast=True,
-            )
-            if data_encoder.pad_token_id is None:
-                data_encoder.pad_token_id = data_encoder.eos_token_id
-            model.resize_token_embeddings(len(data_encoder))
+        if model.config.pad_token_id is None:
+            model.config.pad_token_id = model.config.eos_token_id
+        model.resize_token_embeddings(len(self.data_encoder))
 
         model.gradient_checkpointing_enable(
             gradient_checkpointing_kwargs={
