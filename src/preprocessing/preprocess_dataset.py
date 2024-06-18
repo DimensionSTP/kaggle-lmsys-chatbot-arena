@@ -29,7 +29,7 @@ def preprocess_dataset(
     def generate_prompt(
         data: str,
     ) -> str:
-        default_system_prompt = "Please read the following essay and assign a score of 1,2,3,4,5,6 where 6 is the best. Output only a single number with no explanation."
+        default_system_prompt = "Please read the following essay and assign a score of 0,1,2,3,4,5 where 5 is the best. Output only a single number with no explanation."
         prompt = f"""### Instruction:
         {default_system_prompt} 
 
