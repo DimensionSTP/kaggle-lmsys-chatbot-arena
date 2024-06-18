@@ -83,13 +83,6 @@ class HuggingFaceTuner:
                 name="pretrained_model_name",
                 choices=self.hparams.pretrained_model_name,
             )
-        if self.hparams.dropout_ratio:
-            params["dropout_ratio"] = trial.suggest_float(
-                name="dropout_ratio",
-                low=self.hparams.dropout_ratio.low,
-                high=self.hparams.dropout_ratio.high,
-                log=self.hparams.dropout_ratio.log,
-            )
         if self.hparams.lr:
             params["lr"] = trial.suggest_float(
                 name="lr",
@@ -126,7 +119,6 @@ class HuggingFaceTuner:
             ),
             peft_type=self.module_params.peft_type,
             peft_config=LoraConfig(**self.module_params.peft_config),
-            dropout_ratio=params["dropout_ratio"],
             num_labels=self.module_params.num_labels,
         )
         architecture = HuggingFaceArchitecture(
