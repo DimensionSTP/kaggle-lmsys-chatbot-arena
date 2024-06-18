@@ -25,6 +25,7 @@ model:
     lora_dropout: ${peft_config.lora_dropout}
     bias: ${peft_config.bias}
     task_type: ${peft_config.task_type}
+  num_labels: ${num_labels}
 
 pretrained_model_name: ${pretrained_model_name}
 is_preprocessed: ${is_preprocessed}
