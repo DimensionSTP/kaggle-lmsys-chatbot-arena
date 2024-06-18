@@ -7,13 +7,11 @@ from torch import nn
 from transformers import (
     BitsAndBytesConfig,
     PreTrainedModel,
-    AutoModel,
+    AutoModelForSequenceClassification,
     AutoTokenizer,
 )
 
 from peft import LoraConfig, prepare_model_for_kbit_training, get_peft_model
-
-from ..losses.ordinal_cross_entropy_loss import OrdinalCrossEntropyLoss
 
 
 class HuggingFaceModel(nn.Module):
@@ -29,8 +27,6 @@ class HuggingFaceModel(nn.Module):
         quantization_config: BitsAndBytesConfig,
         peft_type: str,
         peft_config: LoraConfig,
-        dropout_ratio: float,
-        num_labels: int,
     ) -> None:
         super().__init__()
         self.pretrained_model_name = pretrained_model_name
@@ -75,38 +71,16 @@ class HuggingFaceModel(nn.Module):
             self.peft_config.inference_mode = True
 
         self.model = self.get_model()
-        self.dropout = nn.Dropout(
-            p=dropout_ratio,
-        )
-        self.classifier = nn.Linear(
-            self.model.config.hidden_size,
-            num_labels,
-        )
-        self.criterion = OrdinalCrossEntropyLoss()
 
     def forward(
         self,
         encoded: Dict[str, torch.Tensor],
     ) -> Dict[str, torch.Tensor]:
-        label = encoded["labels"]
-        del encoded["labels"]
         output = self.model(**encoded)
-        logit = self.classifier(
-            self.dropout(
-                output.last_hidden_state[:, 0, :],
-            )
-        )
-        loss = self.criterion(
-            logit,
-            label,
-        )
-        return {
-            "logit": logit,
-            "loss": loss,
-        }
+        return output
 
     def get_model(self) -> PreTrainedModel:
-        model = AutoModel.from_pretrained(
+        model = AutoModelForSequenceClassification.from_pretrained(
             self.pretrained_model_name,
             output_hidden_states=False,
             torch_dtype=self.precision,
