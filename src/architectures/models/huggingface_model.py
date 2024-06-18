@@ -28,6 +28,7 @@ class HuggingFaceModel(nn.Module):
         quantization_config: BitsAndBytesConfig,
         peft_type: str,
         peft_config: LoraConfig,
+        num_labels: int,
     ) -> None:
         super().__init__()
         self.pretrained_model_name = pretrained_model_name
@@ -78,6 +79,8 @@ class HuggingFaceModel(nn.Module):
         if self.mode in ["test" "predict"]:
             self.peft_config.inference_mode = True
 
+        self.num_labels = num_labels
+
         self.model = self.get_model()
 
     def forward(
@@ -95,6 +98,9 @@ class HuggingFaceModel(nn.Module):
             attn_implementation=self.attn_implementation,
             quantization_config=self.quantization_config,
             device_map=self.device_map,
+            num_labels=self.num_labels,
+            output_hidden_states=False,
+            ignore_mismatched_sizes=True,
         )
 
         if self.is_preprocessed:
