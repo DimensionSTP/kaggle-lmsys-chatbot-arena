@@ -10,6 +10,8 @@ from deepspeed.ops.adam import FusedAdam, DeepSpeedCPUAdam
 
 from transformers import AutoTokenizer
 
+from losses.ordinal_cross_entropy_loss import OrdinalCrossEntropyLoss
+
 
 class HuggingFaceArchitecture(LightningModule):
     def __init__(
@@ -30,6 +32,7 @@ class HuggingFaceArchitecture(LightningModule):
     ) -> None:
         super().__init__()
         self.model = model
+        self.criterion = OrdinalCrossEntropyLoss()
         self.pretrained_model_name = pretrained_model_name
         if is_preprocessed:
             data_encoder_path = (
@@ -84,20 +87,21 @@ class HuggingFaceArchitecture(LightningModule):
         mode: str,
     ) -> Dict[str, torch.Tensor]:
         encoded = batch["encoded"]
-        original_label = encoded["labels"]
-        label = original_label - 1
+        label = encoded["labels"]
         index = batch["index"]
         output = self(
             encoded=encoded,
             mode=mode,
         )
-        logit = output["logit"]
-        original_pred = torch.argmax(
+        logit = output.logits
+        pred = torch.argmax(
             logit,
             dim=-1,
         )
-        pred = original_pred - 1
-        loss = output["loss"]
+        loss = self.criterion(
+            logit=logit,
+            label=label,
+        )
         return {
             "loss": loss,
             "logit": logit,
