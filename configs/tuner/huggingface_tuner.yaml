@@ -2,10 +2,6 @@ _target_: src.tuners.huggingface_tuner.HuggingFaceTuner
 hparams:
   pretrained_model_name:
     - meta-llama/Meta-Llama-3-8B-Instruct
-  dropout_ratio:
-    low: 0.05
-    high: 0.5
-    log: False
   lr:
     low: 0.00005
     high: 0.0002
