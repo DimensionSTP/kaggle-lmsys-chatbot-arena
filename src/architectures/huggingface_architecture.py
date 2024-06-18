@@ -10,7 +10,7 @@ from deepspeed.ops.adam import FusedAdam, DeepSpeedCPUAdam
 
 from transformers import AutoTokenizer
 
-from losses.ordinal_cross_entropy_loss import OrdinalCrossEntropyLoss
+from .losses.ordinal_cross_entropy_loss import OrdinalCrossEntropyLoss
 
 
 class HuggingFaceArchitecture(LightningModule):
