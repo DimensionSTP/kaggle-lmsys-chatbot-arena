@@ -53,7 +53,6 @@ peft_config:
   bias: none
   task_type: CAUSAL_LM
   inference_mode: False
-dropout_ratio: 0.1
 
 lr: 0.0001
 period: 2
