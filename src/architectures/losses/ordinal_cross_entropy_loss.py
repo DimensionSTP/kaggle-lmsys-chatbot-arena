@@ -16,10 +16,7 @@ class OrdinalCrossEntropyLoss(nn.Module):
         num_labels = logit.size(1)
         label = label.view(-1, 1)
         target_matrix = (
-            torch.arange(
-                1,
-                num_labels + 1,
-            )
+            torch.arange(num_labels)
             .expand(
                 batch_size,
                 num_labels,
