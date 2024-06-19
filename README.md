@@ -1,16 +1,16 @@
 # Pipeline for Kaggle competition
 
-## For Kaggle learning-agency-lab-automated-essay-scoring-2 competition
+## For Kaggle lmsys-chatbot-arena competition
 
 ### Dataset
-Kaggle learning-agency-lab-automated-essay-scoring-2 competition dataset(Automatic Essay Scoring dataset)
+Kaggle lmsys-chatbot-arena competition dataset(Automatic Essay Scoring dataset)
 
 ### Quick setup
 
 ```bash
 # clone project
-git clone https://github.com/DimensionSTP/kaggle-learning-agency-lab-automated-essay-scoring-2.git
-cd kaggle-learning-agency-lab-automated-essay-scoring-2
+git clone https://github.com/DimensionSTP/kaggle-lmsys-chatbot-arena.git
+cd kaggle-lmsys-chatbot-arena
 
 # [OPTIONAL] create conda environment
 conda create -n myenv python=3.8
