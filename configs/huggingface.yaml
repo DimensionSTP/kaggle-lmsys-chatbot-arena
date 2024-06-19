@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - dataset: huggingface_kaggleessayscoring_dataset
+  - dataset: huggingface_kagglechatbotarena_dataset
   - architecture: huggingface_architecture
   - tuner: huggingface_tuner
   - logger: wandb
@@ -8,13 +8,13 @@ defaults:
   - callbacks: callbacks
   - trainer: trainer
 
-package_name: kaggle-learning-agency-lab-automated-essay-scoring-2
+package_name: kaggle-lmsys-chatbot-arena
 project_dir: ${oc.env:PROJECT_DIR}/${package_name}
 connected_dir: ${oc.env:CONNECTED_DIR}/${package_name}
 
 seed: 2024
 
-num_labels: 6
+num_labels: 3
 
 split:
   train: train
@@ -62,7 +62,7 @@ options:
   output_scores: True
   no_repeat_ngram_size: 2
 
-monitor: val_MulticlassCohenKappa
+monitor: val_MulticlassF1Score
 tracking_direction: max
 patience: 2
 min_delta: 0
@@ -78,7 +78,7 @@ gradient_clip_algorithm: norm
 epoch: 100
 
 model_name: HuggingFace
-dataset_name: KaggleEssayScoring
+dataset_name: KaggleChatbotArena
 mode: train
 
 is_tuned: tuned
@@ -94,7 +94,7 @@ resumed_step: 0
 ckpt_path: ${callbacks.model_checkpoint.dirpath}/epoch=${epoch}.ckpt
 
 submission_file_name: test
-id_column_name: essay_id
+id_column_name: id
 logit_name: ${save_detail}-epoch=${epoch}
 submission_name: ${save_detail}-epoch=${epoch}
 
