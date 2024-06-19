@@ -1,4 +1,4 @@
-_target_: src.datasets.huggingface_dataset.KaggleEssayScoringDataset
+_target_: src.datasets.huggingface_dataset.KaggleChatbotArenaDataset
 data_path: ${connected_dir}/data
 split: ${split.train}
 split_ratio: ${split_ratio}
