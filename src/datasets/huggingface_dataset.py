@@ -20,6 +20,7 @@ class KaggleChatbotArenaDataset(Dataset):
         data_column_names: List[str],
         prompt_column_name: str,
         target_column_names: List[str],
+        label_column_name: str,
         num_devices: int,
         batch_size: int,
         pretrained_model_name: str,
@@ -35,6 +36,7 @@ class KaggleChatbotArenaDataset(Dataset):
         self.data_column_names = data_column_names
         self.prompt_column_name = prompt_column_name
         self.target_column_names = target_column_names
+        self.label_column_name = label_column_name
         self.num_devices = num_devices
         self.batch_size = batch_size
         self.pretrained_model_name = pretrained_model_name
@@ -148,11 +150,11 @@ class KaggleChatbotArenaDataset(Dataset):
             datas = []
             for data_column_name in self.data_column_names:
                 datas.append(data[data_column_name].apply(lambda x: x.strip()).tolist())
-        data["label"] = data.apply(
+        data[self.label_column_name] = data.apply(
             self.convert_labels,
             axis=1,
         )
-        labels = data["label"].tolist()
+        labels = data[self.label_column_name].tolist()
         return {
             "datas": datas,
             "labels": labels,
