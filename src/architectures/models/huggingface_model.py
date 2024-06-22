@@ -18,7 +18,6 @@ class HuggingFaceModel(nn.Module):
     def __init__(
         self,
         pretrained_model_name: str,
-        is_causal: bool,
         is_preprocessed: bool,
         custom_data_encoder_path: str,
         merged_model_path: str,
@@ -32,7 +31,6 @@ class HuggingFaceModel(nn.Module):
     ) -> None:
         super().__init__()
         self.pretrained_model_name = pretrained_model_name
-        self.is_causal = is_causal
         self.is_preprocessed = is_preprocessed
         if self.is_preprocessed:
             data_encoder_path = (
@@ -60,12 +58,10 @@ class HuggingFaceModel(nn.Module):
             self.precision = torch.float32
         elif precision == 16 or precision == "16":
             self.precision = torch.float16
-            if self.is_causal:
-                self.attn_implementation = "flash_attention_2"
+            self.attn_implementation = "flash_attention_2"
         elif precision == "bf16":
             self.precision = torch.bfloat16
-            if self.is_causal:
-                self.attn_implementation = "flash_attention_2"
+            self.attn_implementation = "flash_attention_2"
         else:
             self.precision = "auto"
 
