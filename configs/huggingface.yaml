@@ -25,11 +25,16 @@ split:
 batch_size: 128
 
 split_ratio: 0.1
-is_causal: True
 is_preprocessed: True
-data_column_name: full_text
+data_column_names:
+  - prompt
+  - response_a
+  - response_b
 prompt_column_name: cut_prompt
-target_column_name: score
+target_column_names:
+  - winner_model_a
+  - winner_model_b
+  - winner_tie
 upload_user: meta-llama
 model_type: Meta-Llama-3-8B-Instruct
 pretrained_model_name: ${upload_user}/${model_type}
