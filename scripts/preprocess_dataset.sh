@@ -1,8 +1,8 @@
 #!/bin/bash
 
 path="src/preprocessing"
-upload_users=("meta-llama" "meta-llama" "KevSun" "microsoft")
-model_types=("Meta-Llama-3-8B-Instruct" "Meta-Llama-3-8B" "IELTS_essay_scoring" "deberta-v3-large")
+upload_users=("meta-llama" "meta-llama" "nvidia")
+model_types=("Meta-Llama-3-8B-Instruct" "Meta-Llama-3-8B" "Llama3-ChatQA-1.5-8B")
 length=${#model_types[@]}
 dataset_modes="train test"
 
