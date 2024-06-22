@@ -318,8 +318,39 @@ def predict(
         f"{config.connected_dir}/logits/{config.logit_name}.npy",
         sorted_logits,
     )
-    pred_df[config.target_column_name] = all_predictions
-    pred_df = pred_df[[config.id_column_name, config.target_column_name]]
+    pred_df[config.label_column_name] = all_predictions
+
+    def convert_targets(
+        row: pd.Series,
+    ):
+        if row[config.label_column_name] == 0:
+            return pd.Series(
+                [1, 0, 0],
+                index=config.target_column_names,
+            )
+        elif row[config.label_column_name] == 1:
+            return pd.Series(
+                [0, 1, 0],
+                index=config.target_column_names,
+            )
+        elif row[config.label_column_name] == 2:
+            return pd.Series(
+                [0, 0, 1],
+                index=config.target_column_names,
+            )
+
+    pred_df[config.target_column_names] = pred_df.apply(
+        convert_targets,
+        axis=1,
+    )
+    pred_df = pred_df.drop(
+        config.label_column_name,
+        axis=1,
+    )
+    pred_df = pred_df.drop(
+        config.data_column_names,
+        axis=1,
+    )
     if not os.path.exists(f"{config.connected_dir}/submissions"):
         os.makedirs(
             f"{config.connected_dir}/submissions",
