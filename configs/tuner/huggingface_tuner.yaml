@@ -16,7 +16,6 @@ hparams:
     log: False
 
 module_params:
-  is_causal: ${is_causal}
   is_preprocessed: ${is_preprocessed}
   custom_data_encoder_path: ${custom_data_encoder_path}
   merged_model_path: ${merged_model_path}
@@ -36,6 +35,7 @@ module_params:
     bias: ${peft_config.bias}
     task_type: ${peft_config.task_type}
   num_labels: ${num_labels}
+  average: macro
   interval: step
   options: ${options}
   target_max_length: ${target_max_length}
