@@ -16,11 +16,10 @@ class KaggleChatbotArenaDataset(Dataset):
         split: str,
         split_ratio: float,
         seed: int,
-        is_causal: bool,
         is_preprocessed: bool,
-        data_column_name: str,
+        data_column_names: List[str],
         prompt_column_name: str,
-        target_column_name: str,
+        target_column_names: List[str],
         num_devices: int,
         batch_size: int,
         pretrained_model_name: str,
@@ -32,11 +31,10 @@ class KaggleChatbotArenaDataset(Dataset):
         self.split = split
         self.split_ratio = split_ratio
         self.seed = seed
-        self.is_causal = is_causal
         self.is_preprocessed = is_preprocessed
-        self.data_column_name = data_column_name
+        self.data_column_names = data_column_names
         self.prompt_column_name = prompt_column_name
-        self.target_column_name = target_column_name
+        self.target_column_names = target_column_names
         self.num_devices = num_devices
         self.batch_size = batch_size
         self.pretrained_model_name = pretrained_model_name
@@ -65,23 +63,19 @@ class KaggleChatbotArenaDataset(Dataset):
         self,
         idx: int,
     ) -> Dict[str, Any]:
-        if not self.is_causal:
-            encoded = self.encode_text(
-                data=self.datas[idx],
-                data_type="data",
-            )
+        if self.is_preprocessed:
+            prompt = self.datas[idx] + str(self.labels[idx])
         else:
-            if self.is_preprocessed:
-                prompt = self.datas[idx] + str(self.labels[idx])
-            else:
-                prompt = self.generate_prompt(
-                    data=self.datas[idx],
-                    label=self.labels[idx],
-                )
-            encoded = self.encode_text(
-                data=prompt,
-                data_type="data",
+            datas = []
+            for data_column_idx in range(len(self.datas)):
+                datas.append(self.datas[data_column_idx][idx])
+            prompt = self.generate_prompt(
+                datas=datas,
+                label=self.labels[idx],
             )
+        encoded = self.encode_text(
+            data=prompt,
+        )
         encoded["labels"] = torch.tensor(
             [self.labels[idx]],
             dtype=torch.long,
@@ -100,13 +94,14 @@ class KaggleChatbotArenaDataset(Dataset):
             else:
                 csv_path = f"{self.data_path}/train.csv"
             data = pd.read_csv(csv_path)
+            data = data[(data[self.target_column_names].sum(axis=1) == 1)]
             data = data.fillna("_")
             train_data, val_data = train_test_split(
                 data,
                 test_size=self.split_ratio,
                 random_state=self.seed,
                 shuffle=True,
-                stratify=data[self.target_column_name],
+                stratify=data[self.target_column_names],
             )
             if self.split == "train":
                 data = train_data
@@ -118,6 +113,7 @@ class KaggleChatbotArenaDataset(Dataset):
             else:
                 csv_path = f"{self.data_path}/{self.split}.csv"
             data = pd.read_csv(csv_path)
+            data = data[(data[self.target_column_names].sum(axis=1) == 1)]
             data = data.fillna("_")
         elif self.split == "predict":
             if self.is_preprocessed:
@@ -146,36 +142,43 @@ class KaggleChatbotArenaDataset(Dataset):
                     )
         else:
             raise ValueError(f"Inavalid split: {self.split}")
-        if not self.is_causal:
-            datas = data[self.data_column_name].apply(lambda x: x.strip()).tolist()
+        if self.is_preprocessed:
+            datas = data[self.prompt_column_name].tolist()
         else:
-            if self.is_preprocessed:
-                datas = data[self.prompt_column_name].tolist()
-            else:
-                datas = data[self.data_column_name].apply(lambda x: x.strip()).tolist()
-        labels = data[self.target_column_name].tolist()
+            datas = []
+            for data_column_name in self.data_column_names:
+                datas.append(data[data_column_name].apply(lambda x: x.strip()).tolist())
+        data["label"] = data.apply(
+            self.convert_labels,
+            axis=1,
+        )
+        labels = data["label"].tolist()
         return {
             "datas": datas,
             "labels": labels,
         }
 
+    def convert_labels(
+        self,
+        row: pd.Series,
+    ) -> int:
+        if row[self.target_column_names[0]] == 1:
+            return 0
+        elif row[self.target_column_names[1]] == 1:
+            return 1
+        elif row[self.target_column_names[2]] == 1:
+            return 2
+        else:
+            return 2
+
     def encode_text(
         self,
         data: str,
-        data_type: str,
     ) -> Dict[str, torch.Tensor]:
-        if data_type == "data":
-            if not self.is_causal:
-                max_length = self.data_max_length
-            else:
-                if self.split == "predict":
-                    max_length = self.data_max_length
-                else:
-                    max_length = self.data_max_length + self.target_max_length
-        elif data_type == "target":
-            max_length = self.target_max_length
+        if self.split == "predict":
+            max_length = self.data_max_length
         else:
-            raise ValueError(f"Inavalid data_type: {data_type}")
+            max_length = self.data_max_length + self.target_max_length
         encoded = self.data_encoder(
             data,
             padding="max_length",
@@ -189,26 +192,49 @@ class KaggleChatbotArenaDataset(Dataset):
 
     def generate_prompt(
         self,
-        data: str,
+        datas: List[str],
         label: str,
     ) -> str:
-        default_system_prompt = "Please read the following essay and assign a score of 0,1,2,3,4,5 where 5 is the best. Output only a single number with no explanation."
+        default_system_prompt = """
+You are tasked with predicting which response people would prefer. 
+Read the given prompt and the two responses below, then choose which response you think people will like more.
+If you think people will prefer model a's response, select 0. 
+If you think people will prefer model b's response, select 1. 
+If you think it's a tie, select 2. 
+You must answer only with 0, 1, or 2.
+"""
         if self.split == "predict":
             prompt = f"""### Instruction:
-            {default_system_prompt} 
+{default_system_prompt} 
 
-            ### Input:
-            {data.strip()}
+### Input:
 
-            ### Response:
-            The score is: """.strip()
+**Prompt**:
+{datas[0].strip()}
+
+**Answer of model a**:
+{datas[1].strip()}
+
+**Answer of model b**:
+{datas[2].strip()}
+
+### Response:
+Choose between 0, 1, or 2: """.strip()
         else:
             prompt = f"""### Instruction:
-            {default_system_prompt} 
+{default_system_prompt} 
 
-            ### Input:
-            {data.strip()}
+### Input:
 
-            ### Response:
-            The score is: {label} """.strip()
+**Prompt**:
+{datas[0].strip()}
+
+**Answer of model a**:
+{datas[1].strip()}
+
+**Answer of model b**:
+{datas[2].strip()}
+
+### Response:
+Choose between 0, 1, or 2: {label} """.strip()
         return prompt
