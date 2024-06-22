@@ -35,6 +35,7 @@ target_column_names:
   - winner_model_a
   - winner_model_b
   - winner_tie
+label_column_name: label
 upload_user: meta-llama
 model_type: Meta-Llama-3-8B-Instruct
 pretrained_model_name: ${upload_user}/${model_type}
@@ -99,7 +100,6 @@ resumed_step: 0
 ckpt_path: ${callbacks.model_checkpoint.dirpath}/epoch=${epoch}.ckpt
 
 submission_file_name: test
-id_column_name: id
 logit_name: ${save_detail}-epoch=${epoch}
 submission_name: ${save_detail}-epoch=${epoch}
 
