@@ -18,7 +18,8 @@ def add_empty_column(
     config: DictConfig,
 ) -> None:
     df = pd.read_csv(f"{config.connected_dir}/data/{config.submission_file_name}.csv")
-    df[config.target_column_name] = 0
+    for target_column_name in config.target_column_names:
+        df[target_column_name] = 0
     df.to_csv(
         f"{config.connected_dir}/data/{config.submission_file_name}.csv",
         index=False,
