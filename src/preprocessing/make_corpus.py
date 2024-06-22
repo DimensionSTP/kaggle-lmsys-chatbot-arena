@@ -31,15 +31,15 @@ def make_corpus(
     with open(
         f"{config.connected_dir}/data/corpus/corpus.txt", "w", encoding="utf-8"
     ) as f:
-        for line in train_df[config.data_column_name]:
-            f.write(line + "\n")
-        for line in train_df[config.target_column_name]:
-            f.write(line + "\n")
+        for data_column_name in config.data_column_names:
+            for line in train_df[data_column_name]:
+                f.write(line + "\n")
     with open(
         f"{config.connected_dir}/data/corpus/corpus.txt", "a", encoding="utf-8"
     ) as f:
-        for line in test_df[config.data_column_name]:
-            f.write(line + "\n")
+        for data_column_name in config.data_column_names:
+            for line in test_df[data_column_name]:
+                f.write(line + "\n")
 
 
 if __name__ == "__main__":
