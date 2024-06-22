@@ -7,6 +7,7 @@ is_preprocessed: ${is_preprocessed}
 data_column_names: ${data_column_names}
 prompt_column_name: ${prompt_column_name}
 target_column_names: ${target_column_names}
+label_column_name: ${label_column_name}
 num_devices: ${devices}
 batch_size: ${batch_size}
 pretrained_model_name: ${pretrained_model_name}
