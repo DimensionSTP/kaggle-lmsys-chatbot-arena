@@ -2,15 +2,13 @@ from typing import Dict, Any
 
 import torch
 from torch import optim, nn
-from torchmetrics import MetricCollection, CohenKappa
+from torchmetrics import MetricCollection, F1Score, Accuracy
 
 from lightning.pytorch import LightningModule
 
 from deepspeed.ops.adam import FusedAdam, DeepSpeedCPUAdam
 
 from transformers import AutoTokenizer
-
-from .losses.ordinal_cross_entropy_loss import OrdinalCrossEntropyLoss
 
 
 class HuggingFaceArchitecture(LightningModule):
@@ -21,6 +19,7 @@ class HuggingFaceArchitecture(LightningModule):
         is_preprocessed: bool,
         custom_data_encoder_path: str,
         num_labels: int,
+        average: str,
         strategy: str,
         lr: float,
         period: int,
@@ -32,7 +31,6 @@ class HuggingFaceArchitecture(LightningModule):
     ) -> None:
         super().__init__()
         self.model = model
-        self.criterion = OrdinalCrossEntropyLoss()
         self.pretrained_model_name = pretrained_model_name
         if is_preprocessed:
             data_encoder_path = (
@@ -57,9 +55,15 @@ class HuggingFaceArchitecture(LightningModule):
 
         metrics = MetricCollection(
             [
-                CohenKappa(
+                F1Score(
                     task="multiclass",
                     num_classes=num_labels,
+                    average=average,
+                ),
+                Accuracy(
+                    task="multiclass",
+                    num_classes=num_labels,
+                    average=average,
                 ),
             ]
         )
@@ -98,10 +102,7 @@ class HuggingFaceArchitecture(LightningModule):
             logit,
             dim=-1,
         )
-        loss = self.criterion(
-            logit=logit,
-            label=label,
-        )
+        loss = output.loss
         return {
             "loss": loss,
             "logit": logit,
