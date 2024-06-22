@@ -4,6 +4,7 @@ dotenv.load_dotenv(
     override=True,
 )
 
+from typing import List
 import os
 
 import pandas as pd
@@ -27,21 +28,47 @@ def preprocess_dataset(
     )
 
     def generate_prompt(
-        data: str,
+        datas: List[str],
     ) -> str:
-        default_system_prompt = "Please read the following essay and assign a score of 0,1,2,3,4,5 where 5 is the best. Output only a single number with no explanation."
+        default_system_prompt = """
+You are tasked with predicting which response people would prefer. 
+Read the given prompt and the two responses below, then choose which response you think people will like more.
+If you think people will prefer model a's response, select 0. 
+If you think people will prefer model b's response, select 1. 
+If you think it's a tie, select 2. 
+You must answer only with 0, 1, or 2.
+"""
         prompt = f"""### Instruction:
-        {default_system_prompt} 
+{default_system_prompt} 
 
-        ### Input:
-        {data.strip()}
+### Input:
 
-        ### Response:
-        The score is: """.strip()
+**Prompt**:
+{datas[0].strip()}
+
+**Answer of model a**:
+{datas[1].strip()}
+
+**Answer of model b**:
+{datas[2].strip()}
+
+### Response:
+Choose between 0, 1, or 2: """.strip()
         return prompt
 
-    df["prompt"] = df[config.data_column_name].apply(generate_prompt)
-    df[config.data_column_name] = df[config.data_column_name].apply(lambda x: x.strip())
+    df["prompt"] = df.apply(
+        lambda row: generate_prompt(
+            [
+                row[config.data_column_names[0]],
+                row[config.data_column_names[1]],
+                row[config.data_column_names[2]],
+            ]
+        ),
+        axis=1,
+    )
+    df[config.data_column_names] = df[config.data_column_names].apply(
+        lambda x: x.strip()
+    )
 
     def cut_prompt_to_length(
         prompt: str,
