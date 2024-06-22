@@ -107,7 +107,6 @@ class HuggingFaceTuner:
 
         model = HuggingFaceModel(
             pretrained_model_name=params["pretrained_model_name"],
-            is_causal=self.module_params.is_causal,
             is_preprocessed=self.module_params.is_preprocessed,
             custom_data_encoder_path=self.module_params.custom_data_encoder_path,
             merged_model_path=self.module_params.merged_model_path,
@@ -127,6 +126,7 @@ class HuggingFaceTuner:
             is_preprocessed=self.module_params.is_preprocessed,
             custom_data_encoder_path=self.module_params.custom_data_encoder_path,
             num_labels=self.module_params.num_labels,
+            average=self.module_params.average,
             strategy=self.module_params.strategy,
             lr=params["lr"],
             period=params["period"],
