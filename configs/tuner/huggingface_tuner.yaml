@@ -37,9 +37,6 @@ module_params:
   num_labels: ${num_labels}
   average: macro
   interval: step
-  options: ${options}
-  target_max_length: ${target_max_length}
-  target_column_name: ${target_column_name}
   devices: ${devices}
   accelerator: ${accelerator}
   strategy: ${strategy}
