@@ -24,7 +24,8 @@ def preprocess_dataset(
 ) -> None:
     df = pd.read_csv(f"{config.connected_dir}/data/{config.mode}.csv")
     tokenizer = AutoTokenizer.from_pretrained(
-        f"{config.custom_data_encoder_path}/{config.pretrained_model_name}"
+        f"{config.custom_data_encoder_path}/{config.pretrained_model_name}",
+        use_fast=True,
     )
 
     def generate_prompt(
@@ -56,7 +57,7 @@ You must answer only with 0, 1, or 2.
 Choose between 0, 1, or 2: """.strip()
         return prompt
 
-    df["prompt"] = df.apply(
+    df["total_prompt"] = df.apply(
         lambda row: generate_prompt(
             [
                 row[config.data_column_names[0]],
@@ -66,9 +67,8 @@ Choose between 0, 1, or 2: """.strip()
         ),
         axis=1,
     )
-    df[config.data_column_names] = df[config.data_column_names].apply(
-        lambda x: x.strip()
-    )
+    for data_column_name in config.data_column_names:
+        df[data_column_name] = df[data_column_name].apply(lambda x: x.strip())
 
     def cut_prompt_to_length(
         prompt: str,
@@ -81,7 +81,7 @@ Choose between 0, 1, or 2: """.strip()
         cut_prompt = tokenizer.convert_tokens_to_string(tokens)
         return cut_prompt
 
-    df[config.prompt_column_name] = df["prompt"].apply(
+    df[config.prompt_column_name] = df["total_prompt"].apply(
         lambda x: cut_prompt_to_length(
             prompt=x,
             tokenizer=tokenizer,
