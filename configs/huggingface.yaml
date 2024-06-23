@@ -22,7 +22,7 @@ split:
   test: test
   predict: predict
 
-batch_size: 128
+batch_size: 96
 
 split_ratio: 0.1
 is_preprocessed: True
@@ -41,7 +41,7 @@ model_type: Meta-Llama-3-8B-Instruct
 pretrained_model_name: ${upload_user}/${model_type}
 custom_data_encoder_path: ${connected_dir}/data/merged_tokenizer
 merged_model_path: ${connected_dir}/data/merged_model/${pretrained_model_name}
-data_max_length: 598
+data_max_length: 1022
 target_max_length: 2
 
 quantization_type: origin
