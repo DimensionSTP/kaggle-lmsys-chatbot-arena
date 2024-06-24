@@ -1,3 +1,4 @@
+from typing import List
 import os
 
 import numpy as np
@@ -304,11 +305,10 @@ def predict(
         f"{config.connected_dir}/data/{config.submission_file_name}.csv"
     )
     sorted_logits = sorted_logits_with_indices[: len(pred_df), :-1].numpy()
-    scaled_ll_predictions = np.argmax(
+    all_predictions = np.argmax(
         sorted_logits,
         axis=-1,
     )
-    all_predictions = scaled_ll_predictions + 1
     if not os.path.exists(f"{config.connected_dir}/logits"):
         os.makedirs(
             f"{config.connected_dir}/logits",
@@ -319,30 +319,10 @@ def predict(
         sorted_logits,
     )
     pred_df[config.label_column_name] = all_predictions
-
-    def convert_targets(
-        row: pd.Series,
-    ):
-        if row[config.label_column_name] == 0:
-            return pd.Series(
-                [1, 0, 0],
-                index=config.target_column_names,
-            )
-        elif row[config.label_column_name] == 1:
-            return pd.Series(
-                [0, 1, 0],
-                index=config.target_column_names,
-            )
-        elif row[config.label_column_name] == 2:
-            return pd.Series(
-                [0, 0, 1],
-                index=config.target_column_names,
-            )
-
-    pred_df[config.target_column_names] = pred_df.apply(
-        convert_targets,
-        axis=1,
-    )
+    for i, target_column_name in enumerate(config.target_column_names):
+        pred_df[target_column_name] = pred_df[config.label_column_name].apply(
+            lambda x: 1 if x == i else 0
+        )
     pred_df = pred_df.drop(
         config.label_column_name,
         axis=1,
