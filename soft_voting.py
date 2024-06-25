@@ -27,7 +27,9 @@ def softly_vote_logits(
     connected_dir = config.connected_dir
     voted_logit = config.voted_logit
     submission_file = config.submission_file
-    target_column_name = config.target_column_name
+    data_column_names = config.data_column_names
+    target_column_names = config.target_column_names
+    label_column_name = config.label_column_name
     voted_file = config.voted_file
     votings = config.votings
 
@@ -55,7 +57,19 @@ def softly_vote_logits(
         voted_logit,
         weighted_logits,
     )
-    submission_df[target_column_name] = ensemble_predictions
+    submission_df[label_column_name] = ensemble_predictions
+    for i, target_column_name in enumerate(target_column_names):
+        submission_df[target_column_name] = submission_df[label_column_name].apply(
+            lambda x: 1 if x == i else 0
+        )
+    submission_df = submission_df.drop(
+        label_column_name,
+        axis=1,
+    )
+    submission_df = submission_df.drop(
+        data_column_names,
+        axis=1,
+    )
     submission_df.to_csv(
         voted_file,
         index=False,
