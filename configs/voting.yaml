@@ -4,13 +4,21 @@ defaults:
 run_name: soft_voting
 work_dir: ${hydra:runtime.cwd}
 
-package_name: kaggle-learning-agency-lab-automated-essay-scoring-2
+package_name: kaggle-lmsys-chatbot-arena
 connected_dir: ${oc.env:CONNECTED_DIR}/${package_name}
 voted_name: soft_voting
 
 voted_logit: ${connected_dir}/logits/${voted_name}.npy
 submission_file: ${connected_dir}/data/test.csv
-target_column_name: target
+data_column_names:
+  - prompt
+  - response_a
+  - response_b
+target_column_names:
+  - winner_model_a
+  - winner_model_b
+  - winner_tie
+label_column_name: label
 voted_file: ${connected_dir}/submissions/${voted_name}.csv
 
 votings:
