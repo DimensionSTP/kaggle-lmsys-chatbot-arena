@@ -41,7 +41,7 @@ class KaggleChatbotArenaDataset(Dataset):
         self.num_devices = num_devices
         self.batch_size = batch_size
         self.pretrained_model_name = pretrained_model_name
-        if self.is_preprocessed:
+        if is_preprocessed:
             data_encoder_path = custom_data_encoder_path
         else:
             data_encoder_path = self.pretrained_model_name

@@ -2,6 +2,7 @@ from typing import Dict, Any
 
 import torch
 from torch import optim, nn
+from torch.nn import functional as F
 from torchmetrics import MetricCollection, F1Score, Accuracy
 
 from lightning.pytorch import LightningModule
@@ -266,11 +267,15 @@ class HuggingFaceArchitecture(LightningModule):
             mode="eval",
         )
         logit = output["logit"]
+        probability = F.softmax(
+            logit,
+            dim=-1,
+        )
         index = output["index"]
         index = index.unsqueeze(-1).float()
         output = torch.cat(
             (
-                logit,
+                probability,
                 index,
             ),
             dim=-1,

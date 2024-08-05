@@ -33,7 +33,7 @@ class HuggingFaceModel(nn.Module):
         super().__init__()
         self.pretrained_model_name = pretrained_model_name
         self.is_preprocessed = is_preprocessed
-        if self.is_preprocessed:
+        if is_preprocessed:
             data_encoder_path = custom_data_encoder_path
         else:
             data_encoder_path = self.pretrained_model_name
