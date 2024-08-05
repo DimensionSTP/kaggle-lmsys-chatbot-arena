@@ -8,19 +8,14 @@ package_name: kaggle-lmsys-chatbot-arena
 connected_dir: ${oc.env:CONNECTED_DIR}/${package_name}
 voted_name: soft_voting
 
-voted_logit: ${connected_dir}/logits/${voted_name}.npy
-submission_file: ${connected_dir}/data/test.csv
-data_column_names:
-  - prompt
-  - response_a
-  - response_b
+voted_probability: ${connected_dir}/probabilities/${voted_name}.npy
+submission_file: ${connected_dir}/data/sample_submission.csv
 target_column_names:
   - winner_model_a
   - winner_model_b
   - winner_tie
-label_column_name: label
 voted_file: ${connected_dir}/submissions/${voted_name}.csv
 
 votings:
-  logit1: 0.5
-  logit2: 0.5
+  probability1: 0.5
+  probability2: 0.5

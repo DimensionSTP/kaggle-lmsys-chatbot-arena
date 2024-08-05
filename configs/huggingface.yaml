@@ -97,8 +97,8 @@ save_detail: ${upload_user}_${model_type}-quantization_type=${quantization_type}
 resumed_step: 0
 ckpt_path: ${callbacks.model_checkpoint.dirpath}/epoch=${epoch}.ckpt
 
-submission_file_name: test
-logit_name: ${save_detail}-epoch=${epoch}
+submission_file_name: sample_submission
+probability_name: ${save_detail}-epoch=${epoch}
 submission_name: ${save_detail}-epoch=${epoch}
 
 user_name: ${oc.env:USER_NAME}
