@@ -254,13 +254,13 @@ def predict(
             config.strategy == "deepspeed_stage_3"
             or config.strategy == "deepspeed_stage_3_offload"
         ):
-            logits = trainer.predict(
+            probabilities = trainer.predict(
                 model=architecture,
                 dataloaders=predict_loader,
                 ckpt_path=f"{config.ckpt_path}/model.pt",
             )
         else:
-            logits = trainer.predict(
+            probabilities = trainer.predict(
                 model=architecture,
                 dataloaders=predict_loader,
                 ckpt_path=config.ckpt_path,
@@ -278,41 +278,59 @@ def predict(
         )
         raise e
 
-    if len(logits[0].shape) == 3:
-        logits = [
+    if len(probabilities[0].shape) == 3:
+        probabilities = [
             torch.cat(
-                logit.split(
+                probability.split(
                     1,
                     dim=0,
                 ),
                 dim=1,
             ).view(
                 -1,
-                logits[0].shape[-1],
+                probabilities[0].shape[-1],
             )
-            for logit in logits
+            for probability in probabilities
         ]
-    all_logits = torch.cat(
-        logits,
+    all_probabilities = torch.cat(
+        probabilities,
         dim=0,
     )
-    sorted_logits_with_indices = all_logits[all_logits[:, -1].argsort()]
+    sorted_probabilities_with_indices = all_probabilities[
+        all_probabilities[:, -1].argsort()
+    ]
+    probability_df = pd.read_csv(
+        f"{config.connected_dir}/data/{config.submission_file_name}.csv"
+    )
     pred_df = pd.read_csv(
         f"{config.connected_dir}/data/{config.submission_file_name}.csv"
     )
-    sorted_logits = sorted_logits_with_indices[: len(pred_df), :-1].numpy()
+    sorted_probabilities = sorted_probabilities_with_indices[
+        : len(pred_df), :-1
+    ].numpy()
     all_predictions = np.argmax(
-        sorted_logits,
+        sorted_probabilities,
         axis=-1,
     )
-    if not os.path.exists(f"{config.connected_dir}/logits"):
+    if not os.path.exists(f"{config.connected_dir}/probabilities"):
         os.makedirs(
-            f"{config.connected_dir}/logits",
+            f"{config.connected_dir}/probabilities",
             exist_ok=True,
         )
     np.save(
-        f"{config.connected_dir}/logits/{config.logit_name}.npy",
-        sorted_logits,
+        f"{config.connected_dir}/probabilities/{config.probability_name}.npy",
+        sorted_probabilities,
+    )
+    for i, target_column_name in enumerate(config.target_column_names):
+        probability_df[target_column_name] = sorted_probabilities[:, i]
+    if not os.path.exists(f"{config.connected_dir}/submissions"):
+        os.makedirs(
+            f"{config.connected_dir}/submissions",
+            exist_ok=True,
+        )
+    probability_df.to_csv(
+        f"{config.connected_dir}/submissions/{config.submission_name}.csv",
+        index=False,
     )
     pred_df[config.label_column_name] = all_predictions
     for i, target_column_name in enumerate(config.target_column_names):
@@ -323,17 +341,13 @@ def predict(
         config.label_column_name,
         axis=1,
     )
-    pred_df = pred_df.drop(
-        config.data_column_names,
-        axis=1,
-    )
-    if not os.path.exists(f"{config.connected_dir}/submissions"):
+    if not os.path.exists(f"{config.connected_dir}/results"):
         os.makedirs(
-            f"{config.connected_dir}/submissions",
+            f"{config.connected_dir}/results",
             exist_ok=True,
         )
     pred_df.to_csv(
-        f"{config.connected_dir}/submissions/{config.submission_name}.csv",
+        f"{config.connected_dir}/results/{config.submission_name}.csv",
         index=False,
     )
 
