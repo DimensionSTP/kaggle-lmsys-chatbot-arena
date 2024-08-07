@@ -102,6 +102,7 @@ probability_name: ${save_detail}-epoch=${epoch}
 submission_name: ${save_detail}-epoch=${epoch}
 
 user_name: ${oc.env:USER_NAME}
+model_detail: Llama-3-8B-Instruct
 upload_tag: chatbot-preference
 num_safetensors: 10
 
