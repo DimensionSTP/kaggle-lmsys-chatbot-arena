@@ -215,16 +215,16 @@ You must answer only with 0, 1, or 2.
 ### Input:
 
 **Prompt**:
-{datas[0].strip()}
+{datas[0]}
 
 **Answer of model a**:
-{datas[1].strip()}
+{datas[1]}
 
 **Answer of model b**:
-{datas[2].strip()}
+{datas[2]}
 
 ### Response:
-Choose between 0, 1, or 2: """.strip()
+Choose between 0, 1, or 2: """
         else:
             prompt = f"""### Instruction:
 {default_system_prompt} 
@@ -232,14 +232,14 @@ Choose between 0, 1, or 2: """.strip()
 ### Input:
 
 **Prompt**:
-{datas[0].strip()}
+{datas[0]}
 
 **Answer of model a**:
-{datas[1].strip()}
+{datas[1]}
 
 **Answer of model b**:
-{datas[2].strip()}
+{datas[2]}
 
 ### Response:
-Choose between 0, 1, or 2: {label} """.strip()
+Choose between 0, 1, or 2: {label} """
         return prompt
