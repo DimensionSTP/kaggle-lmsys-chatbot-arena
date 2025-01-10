@@ -312,22 +312,20 @@ def predict(
         sorted_probabilities,
         axis=-1,
     )
-    if not os.path.exists(f"{config.connected_dir}/probabilities"):
-        os.makedirs(
-            f"{config.connected_dir}/probabilities",
-            exist_ok=True,
-        )
+    os.makedirs(
+        f"{config.connected_dir}/probabilities",
+        exist_ok=True,
+    )
     np.save(
         f"{config.connected_dir}/probabilities/{config.probability_name}.npy",
         sorted_probabilities,
     )
     for i, target_column_name in enumerate(config.target_column_names):
         probability_df[target_column_name] = sorted_probabilities[:, i]
-    if not os.path.exists(f"{config.connected_dir}/submissions"):
-        os.makedirs(
-            f"{config.connected_dir}/submissions",
-            exist_ok=True,
-        )
+    os.makedirs(
+        f"{config.connected_dir}/submissions",
+        exist_ok=True,
+    )
     probability_df.to_csv(
         f"{config.connected_dir}/submissions/{config.submission_name}.csv",
         index=False,
@@ -341,11 +339,10 @@ def predict(
         config.label_column_name,
         axis=1,
     )
-    if not os.path.exists(f"{config.connected_dir}/results"):
-        os.makedirs(
-            f"{config.connected_dir}/results",
-            exist_ok=True,
-        )
+    os.makedirs(
+        f"{config.connected_dir}/results",
+        exist_ok=True,
+    )
     pred_df.to_csv(
         f"{config.connected_dir}/results/{config.submission_name}.csv",
         index=False,
